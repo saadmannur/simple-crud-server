@@ -27,6 +27,7 @@ const run = async () => {
         const db = client.db('simpleCrud');
         const userCollection = db.collection('users');
 
+        //READ
         app.get('/users', async (req, res) => {
             const cursor = userCollection.find();
             const result = await cursor.toArray();
@@ -37,24 +38,61 @@ const run = async () => {
             const id = req.params.id;
             console.log(id);
             const query = {
-                _id : new ObjectId(id)
+                _id: new ObjectId(id)
             }
             const user = await userCollection.findOne(query)
             res.send(user)
+        })
+
+        //POST
+        app.post('/users', async (req, res) => {
+            const newUser = req.body;
+            const result = await userCollection.insertOne(newUser)
+            res.send(result)
+        })
+
+        //PATCH
+        app.patch('/users/:id', async (req, res) => {
+            const id = req.params.id
+
+            const filter = {
+                _id: new ObjectId(id)
+            }
+
+            const modifiedDocument = req.body;
+
+            const updatedDocument = {
+                $set:{
+                    name: modifiedDocument.name,
+                    email: modifiedDocument.email,
+                    role: modifiedDocument.role
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDocument);
+            res.send(result)
+        })
+
+        //DELETE
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: new ObjectId(id)
+            }
+            const result = await userCollection.deleteOne(query)
+            res.send(result)
         })
 
 
         await client.db('admin').command({ ping: 1 })
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     }
-    finally{
+    finally {
         // await client.close();
     }
 }
 run().catch(console.dir)
 
 
-//mongodb+srv://simpleCrudUsers:5sJly2bEntwUatkV@cluster0.nbebzri.mongodb.net/?appName=Cluster0
 
 app.get('/', (req, res) => {
     res.send("simple CRUD server is serving")
